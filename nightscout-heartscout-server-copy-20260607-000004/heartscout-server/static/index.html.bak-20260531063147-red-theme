@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <title>HeartScout Sanctum</title>
+  <style>
+    :root { color-scheme: dark; --bg:#020805; --panel:#07130c; --panel2:#031008; --line:#166534; --grid:#052e16; --text:#dcfce7; --muted:#86efac; --dim:#4ade80; --green:#22c55e; --green2:#bbf7d0; --warn:#84cc16; --red:#ef4444; --blue:#22c55e; --blue2:#bbf7d0; --blood:#064e3b; --gold:#22c55e; --brass:#16a34a; }
+    * { box-sizing: border-box; }
+    html, body { margin:0; min-height:100%; background:radial-gradient(circle at 50% -22%, rgba(22,163,74,.42) 0%, rgba(5,46,22,.92) 30%, #020805 72%, #000302 100%); color:var(--text); font-family: Georgia, 'Times New Roman', serif; }
+    body { overflow-y:auto; }
+    body:before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.20; background:repeating-linear-gradient(0deg, rgba(34,197,94,.07) 0 1px, transparent 1px 5px), radial-gradient(circle at 12% 20%, rgba(34,197,94,.18), transparent 20%), radial-gradient(circle at 88% 10%, rgba(5,150,105,.24), transparent 24%); mix-blend-mode:screen; }
+    body:after { content:""; position:fixed; inset:0; pointer-events:none; opacity:.18; background:linear-gradient(90deg, transparent 0 49.8%, rgba(34,197,94,.26) 50%, transparent 50.2%), linear-gradient(0deg, transparent 0 49.8%, rgba(34,197,94,.12) 50%, transparent 50.2%); background-size:100% 100%,100% 100%; }
+    .wrap { width:min(1120px, 100%); margin:0 auto; padding:10px 16px; position:relative; z-index:1; }
+    .top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:8px; border-bottom:1px solid rgba(34,197,94,.38); padding-bottom:8px; }
+    h1 { margin:0; font-size:34px; line-height:1; letter-spacing:.08em; text-transform:uppercase; color:#bbf7d0; text-shadow:0 0 16px rgba(34,197,94,.34), 0 0 2px #000; }
+    h1:before { content:"✠ "; color:#22c55e; text-shadow:0 0 10px rgba(34,197,94,.75); }
+    h1:after { content:" ✠"; color:#22c55e; text-shadow:0 0 10px rgba(34,197,94,.75); }
+    .sub { margin-top:4px; color:var(--muted); font-size:12px; letter-spacing:.09em; text-transform:uppercase; font-family:'Courier New', monospace; }
+    .pill { border:1px solid rgba(34,197,94,.58); background:linear-gradient(180deg, rgba(5,46,22,.96), rgba(2,12,6,.92)); color:#bbf7d0; padding:5px 10px; border-radius:2px; font-size:11px; white-space:nowrap; text-transform:uppercase; letter-spacing:.08em; font-family:'Courier New', monospace; box-shadow:0 0 18px rgba(22,163,74,.18) inset; }
+    .pill.ok { border-color:#22c55e; background:#052e16; color:#bbf7d0; }
+    .pill.warn { border-color:#22c55e; background:#052e16; color:#bbf7d0; }
+    .pill.err { border-color:#16a34a; background:#052e16; color:#dcfce7; }
+    .panel, .card { position:relative; background:linear-gradient(180deg, rgba(5,46,22,.97), rgba(2,12,6,.98)); border:1px solid rgba(34,197,94,.40); box-shadow:0 0 28px rgba(22,163,74,.18) inset, 0 0 0 1px rgba(0,0,0,.8), 0 8px 28px rgba(0,0,0,.35); border-radius:2px; }
+    .panel:before, .card:before { content:""; position:absolute; inset:4px; border:1px solid rgba(34,197,94,.42); pointer-events:none; }
+    .panel { padding:13px; margin-bottom:9px; }
+    .hero { display:grid; grid-template-columns:minmax(210px, .70fr) minmax(0, 1.30fr); gap:10px; align-items:stretch; }
+    .bpm-row { display:flex; align-items:baseline; gap:10px; }
+    #current-bpm { font-family:'Courier New', monospace; font-size:clamp(64px, 10vw, 104px); font-weight:900; line-height:.85; letter-spacing:-.08em; font-variant-numeric:tabular-nums; color:#bbf7d0; text-shadow:0 0 16px rgba(34,197,94,.45), 0 0 34px rgba(22,163,74,.30); }
+    .unit { color:var(--muted); font-size:24px; text-transform:uppercase; letter-spacing:.08em; }
+    .muted { color:var(--muted); font-size:13px; font-family:'Courier New', monospace; }
+    .small { color:var(--dim); font-size:11px; font-family:'Courier New', monospace; }
+    .chart-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:10px; }
+    .title { font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#bbf7d0; font-size:13px; text-shadow:0 0 10px rgba(34,197,94,.22); }
+    .title:before, .label:before { content:"// "; color:#22c55e; }
+    .canvas-box { position:relative; width:100%; overflow:hidden; border-radius:0; background:radial-gradient(circle at 50% 50%, rgba(22,163,74,.14), rgba(2,12,6,.80)); border:1px solid rgba(34,197,94,.38); box-shadow:inset 0 0 18px rgba(0,0,0,.75); }
+    .canvas-box:after { content:""; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(180deg, rgba(187,247,208,.045) 0 1px, transparent 1px 4px); opacity:.32; }
+    .ecg-box { height:165px; }
+    .history-box { height:180px; }
+    canvas { display:block; width:100%; height:100%; }
+    .glucose-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; align-items:stretch; }
+    .glucose-graph { grid-column:1 / 4; min-height:222px; border-color:rgba(34,197,94,.48); box-shadow:0 0 28px rgba(22,163,74,.16) inset, 0 0 0 1px rgba(0,0,0,.8), 0 8px 28px rgba(0,0,0,.35); }
+    .glucose-graph:before { border-color:rgba(34,197,94,.46); }
+    .glucose-graph .title { color:#bbf7d0; text-shadow:0 0 12px rgba(34,197,94,.25); }
+    .glucose-graph .title:before { color:#22c55e; }
+    .glucose-graph .muted { color:#86efac; }
+    .glucose-graph .canvas-box { border-color:rgba(34,197,94,.44); background:radial-gradient(circle at 50% 50%, rgba(22,163,74,.14), rgba(2,12,6,.80)); box-shadow:inset 0 0 20px rgba(4,30,12,.92), 0 0 16px rgba(22,163,74,.10); }
+    .glucose-graph .canvas-box:after { background:repeating-linear-gradient(180deg, rgba(187,247,208,.045) 0 1px, transparent 1px 4px); }
+    .glucose-info { grid-column:2 / 3; }
+    .glucose-reading { grid-column:3 / 4; }
+    .card { padding:11px; min-height:82px; }
+    .glucose-num { font-family:'Courier New', monospace; font-size:56px; font-weight:900; line-height:.86; letter-spacing:-.07em; color:#bbf7d0; text-shadow:0 0 18px rgba(34,197,94,.38), 0 0 30px rgba(22,163,74,.32); font-variant-numeric:tabular-nums; }
+    .glucose-unit { color:var(--dim); font-size:14px; margin-top:2px; text-transform:uppercase; letter-spacing:.08em; }
+    .info-list { display:grid; gap:4px; color:var(--muted); font-size:12px; font-family:'Courier New', monospace; }
+    .info-row { display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid rgba(34,197,94,.40); padding-bottom:4px; }
+    .info-row span:last-child { color:#dcfce7; font-variant-numeric:tabular-nums; text-align:right; }
+    .label { color:var(--muted); text-transform:uppercase; letter-spacing:.12em; font-size:11px; margin-bottom:7px; font-family:'Courier New', monospace; }
+    .num { font-family:'Courier New', monospace; font-size:42px; font-weight:900; font-variant-numeric:tabular-nums; color:#bbf7d0; }
+    .range { display:flex; align-items:baseline; gap:10px; }
+    .foot { margin-top:7px; color:#4ade80; font-size:10px; letter-spacing:.08em; text-transform:uppercase; font-family:'Courier New', monospace; }
+    @media (max-width: 820px) { .wrap{padding:12px;} .top{flex-direction:column;} .hero{grid-template-columns:1fr;} .glucose-grid{grid-template-columns:1fr;} .glucose-graph,.glucose-info,.glucose-reading{grid-column:1;} .panel{padding:12px;} .ecg-box{height:190px;} .history-box{height:200px;} }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="top">
+      <div><h1>HeartScout</h1><div class="sub">ADEPTUS BIOMONITOR • GLUCOSE AUSPEX • CARDIAC COGITATOR</div></div>
+      <div id="status" class="pill">Starting</div>
+    </section>
+
+    <section class="hero panel">
+      <div>
+        <div class="bpm-row"><div id="current-bpm">—</div><div class="unit">bpm</div></div>
+        <div id="last-updated" class="muted">Waiting for data...</div>
+        <div id="data-age" class="small">No telemetry received yet.</div>
+      </div>
+      <div>
+        <div class="chart-head"><div class="title">Cardiac Auspex</div><div class="small">machine-spirit waveform from latest pulse</div></div>
+        <div class="canvas-box ecg-box"><canvas id="ecg-canvas"></canvas></div>
+      </div>
+    </section>
+
+    <section class="glucose-grid">
+      <div class="card glucose-graph">
+        <div class="chart-head"><div class="title">Glucose Noosphere</div><div id="glucose-window" class="muted">Last 24 hours</div></div>
+        <div class="canvas-box history-box"><canvas id="glucose-chart"></canvas></div>
+      </div>
+      <div class="card glucose-info">
+        <div class="label">Vitals Litany</div>
+        <div class="info-list">
+          <div class="info-row"><span>Heart avg today</span><span id="avg-bpm">—</span></div>
+          <div class="info-row"><span>Heart range</span><span><span id="min-bpm">—</span> → <span id="max-bpm">—</span></span></div>
+          <div class="info-row"><span>Heart readings</span><span id="count">0</span></div>
+          <div class="info-row"><span>Glucose trend</span><span id="glucose-trend">—</span></div>
+          <div class="info-row"><span>Glucose delta</span><span id="glucose-delta">—</span></div>
+          <div class="info-row"><span>Glucose age</span><span id="glucose-age">—</span></div>
+        </div>
+      </div>
+      <div class="card glucose-reading">
+        <div class="label">Current Saccharide</div>
+        <div id="current-glucose" class="glucose-num">—</div>
+        <div class="glucose-unit">mg/dL</div>
+        <div id="glucose-updated" class="muted">Waiting for Nightscout...</div>
+      </div>
+    </section>
+
+    <div id="debug" class="foot">COGITATOR POLLING EVERY 5 SECONDS • OMNISSIAH WATCHES THE BLOOD</div>
+  </main>
+
+  <script>
+    const state = { points: [], glucose: [], timer: null, inFlight: false, latestBpm: null, latestTime: null, ecgStart: performance.now() };
+    function $(id) { return document.getElementById(id); }
+    function setStatus(text, mode='neutral') { const el=$('status'); el.textContent=text; el.className = mode==='ok'?'pill ok':mode==='warn'?'pill warn':mode==='err'?'pill err':'pill'; }
+    function sizeCanvas(canvas) { const r=canvas.getBoundingClientRect(), dpr=Math.max(devicePixelRatio||1,1), w=Math.max(300,Math.floor(r.width*dpr)), h=Math.max(160,Math.floor(r.height*dpr)); if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;} return {w,h,dpr}; }
+    function ageText(ms) { const s=Math.max(0,Math.round(ms/1000)); if(s<90) return `${s}s ago`; const m=Math.round(s/60); if(m<90) return `${m}m ago`; return `${(m/60).toFixed(1)}h ago`; }
+
+    function drawGrid(ctx,w,h,dpr,color='rgba(34,197,94,.13)') { ctx.strokeStyle=color; ctx.lineWidth=1*dpr; const step=24*dpr; for(let x=0;x<w;x+=step){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();} for(let y=0;y<h;y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();} }
+
+    function ecgShape(phase) {
+      if (phase < .12) return 0;
+      if (phase < .18) return -0.10 * Math.sin((phase-.12)/.06*Math.PI);
+      if (phase < .22) return 0.18 * Math.sin((phase-.18)/.04*Math.PI);
+      if (phase < .245) return -0.55 * Math.sin((phase-.22)/.025*Math.PI);
+      if (phase < .285) return 1.05 * Math.sin((phase-.245)/.04*Math.PI);
+      if (phase < .33) return -0.25 * Math.sin((phase-.285)/.045*Math.PI);
+      if (phase < .56) return 0.16 * Math.sin((phase-.33)/.23*Math.PI);
+      return 0;
+    }
+
+    function drawEcg() {
+      const canvas=$('ecg-canvas'), ctx=canvas.getContext('2d'), {w,h,dpr}=sizeCanvas(canvas);
+      ctx.clearRect(0,0,w,h); drawGrid(ctx,w,h,dpr);
+      const bpm = state.latestBpm || 72;
+      const beatMs = Math.max(350, Math.min(1600, 60000 / bpm));
+      const now = performance.now();
+      const speed = 9.5; // milliseconds represented per pixel-ish after scaling below
+      const mid = h*.54, amp = h*.30;
+      ctx.strokeStyle = state.latestBpm ? '#22c55e' : 'rgba(34,197,94,.35)'; ctx.lineWidth=2.4*dpr; ctx.shadowColor='rgba(34,197,94,.75)'; ctx.shadowBlur=8*dpr;
+      ctx.beginPath();
+      for(let x=0;x<w;x++) {
+        const t = now - ((w-x) * speed / dpr);
+        const phase = ((t % beatMs) + beatMs) % beatMs / beatMs;
+        const baseline = Math.sin((x/w)*Math.PI*8 + now/900) * 1.4*dpr;
+        const y = mid - ecgShape(phase)*amp + baseline;
+        if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke(); ctx.shadowBlur=0;
+      requestAnimationFrame(drawEcg);
+    }
+
+    function drawHistory() {
+      const canvas=$('history-chart'); if (!canvas) return; const ctx=canvas.getContext('2d'), {w,h,dpr}=sizeCanvas(canvas); ctx.clearRect(0,0,w,h); drawGrid(ctx,w,h,dpr);
+      const pad={left:44*dpr,right:14*dpr,top:14*dpr,bottom:30*dpr}, plotW=w-pad.left-pad.right, plotH=h-pad.top-pad.bottom;
+      const pts=state.points; ctx.font=`${11*dpr}px system-ui`; ctx.fillStyle='#5f7b69';
+      if(!pts.length){ ctx.fillStyle='#5f7b69'; ctx.font=`${15*dpr}px system-ui`; ctx.fillText('No readings in the last 12 hours', pad.left, pad.top+34*dpr); return; }
+      const vals=pts.map(p=>p.bpm); let min=Math.max(30,Math.floor((Math.min(...vals)-10)/10)*10), max=Math.min(220,Math.ceil((Math.max(...vals)+10)/10)*10); if(max<=min) max=min+40;
+      ctx.strokeStyle='rgba(34,197,94,.18)'; ctx.lineWidth=1*dpr; for(let i=0;i<=4;i++){const y=pad.top+plotH*i/4; ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(w-pad.right,y); ctx.stroke();}
+      ctx.fillStyle='#5f7b69'; [min,Math.round((min+max)/2),max].forEach(v=>{const y=pad.top+plotH-((v-min)/(max-min))*plotH; ctx.fillText(String(v),6*dpr,y+4*dpr);});
+      const end=Date.now(), start=end-12*60*60*1000;
+      ctx.strokeStyle='#22c55e'; ctx.lineWidth=2*dpr; ctx.shadowColor='rgba(34,197,94,.55)'; ctx.shadowBlur=5*dpr; ctx.beginPath(); let moved=false;
+      pts.forEach(p=>{ const x=pad.left+((p.t.getTime()-start)/(end-start))*plotW; const y=pad.top+plotH-((p.bpm-min)/(max-min))*plotH; if(x<pad.left||x>w-pad.right) return; if(!moved){ctx.moveTo(x,y); moved=true;} else ctx.lineTo(x,y); }); ctx.stroke(); ctx.shadowBlur=0;
+    }
+
+
+
+    function drawGlucose() {
+      const canvas=$('glucose-chart'), ctx=canvas.getContext('2d'), {w,h,dpr}=sizeCanvas(canvas); ctx.clearRect(0,0,w,h); drawGrid(ctx,w,h,dpr,'rgba(34,197,94,.14)');
+      const pad={left:46*dpr,right:14*dpr,top:14*dpr,bottom:30*dpr}, plotW=w-pad.left-pad.right, plotH=h-pad.top-pad.bottom;
+      const pts=state.glucose; ctx.font=`${11*dpr}px system-ui`; ctx.fillStyle='#5f7b69';
+      if(!pts.length){ ctx.fillStyle='#5f7b69'; ctx.font=`${15*dpr}px system-ui`; ctx.fillText('No Nightscout glucose data configured/available', pad.left, pad.top+34*dpr); return; }
+      const vals=pts.map(p=>p.sgv); let min=Math.max(40,Math.floor((Math.min(...vals)-20)/10)*10), max=Math.min(400,Math.ceil((Math.max(...vals)+20)/10)*10); if(max<=min) max=min+80;
+      const times=pts.map(p=>p.t.getTime()).filter(Number.isFinite); let start=Math.min(...times), end=Math.max(...times); if(end<=start){ start-=30*60*1000; end+=30*60*1000; }
+      [['70','#16a34a'],['180','#4ade80']].forEach(([v,c])=>{ const y=pad.top+plotH-((Number(v)-min)/(max-min))*plotH; if(y>=pad.top&&y<=pad.top+plotH){ctx.strokeStyle=c; ctx.globalAlpha=.50; ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(w-pad.right,y); ctx.stroke(); ctx.globalAlpha=1;} });
+      ctx.fillStyle='#86efac'; [min,Math.round((min+max)/2),max].forEach(v=>{const y=pad.top+plotH-((v-min)/(max-min))*plotH; ctx.fillText(String(v),6*dpr,y+4*dpr);});
+      ctx.strokeStyle='#22c55e'; ctx.lineWidth=2.4*dpr; ctx.shadowColor='rgba(34,197,94,.70)'; ctx.shadowBlur=7*dpr; ctx.beginPath(); let moved=false;
+      pts.forEach(p=>{ const x=pad.left+((p.t.getTime()-start)/(end-start))*plotW; const y=pad.top+plotH-((p.sgv-min)/(max-min))*plotH; if(x<pad.left||x>w-pad.right) return; if(!moved){ctx.moveTo(x,y); moved=true;} else ctx.lineTo(x,y); }); ctx.stroke(); ctx.shadowBlur=0;
+    }
+
+    function updateGlucose(ns) {
+      if (!ns || !ns.configured || ns.error) {
+        state.glucose=[]; $('current-glucose').textContent='—'; $('glucose-updated').textContent=ns && ns.error ? ns.error : 'Nightscout not configured'; $('glucose-trend').textContent='—'; $('glucose-delta').textContent='—'; $('glucose-age').textContent='—'; drawGlucose(); return;
+      }
+      state.glucose = (ns.entries || []).map(d=>({t:new Date(d.timestamp_utc), sgv:Number(d.sgv), direction:d.direction, delta:d.delta})).filter(p=>Number.isFinite(p.sgv) && Number.isFinite(p.t.getTime())).sort((a,b)=>a.t-b.t);
+      if (state.glucose.length > 1) { const spanH=(state.glucose[state.glucose.length-1].t-state.glucose[0].t)/3600000; $('glucose-window').textContent = `Data window: ${spanH < 2 ? Math.round(spanH*60)+'m' : spanH.toFixed(1)+'h'}`; } else { $('glucose-window').textContent = 'Latest reading'; }
+      const latest = ns.latest;
+      if (latest) {
+        const t = new Date(latest.timestamp_utc), age = Date.now()-t.getTime();
+        $('current-glucose').textContent = Math.round(Number(latest.sgv));
+        $('glucose-updated').textContent = `Updated: ${t.toLocaleString()}`;
+        $('glucose-trend').textContent = latest.direction || '—';
+        $('glucose-delta').textContent = latest.delta == null ? '—' : `${Number(latest.delta).toFixed(0)} mg/dL`;
+        $('glucose-age').textContent = ageText(age);
+      } else { $('current-glucose').textContent='—'; $('glucose-updated').textContent='No Nightscout readings'; }
+      drawGlucose();
+    }
+
+    async function fetchJson(path) { const res=await fetch(path,{cache:'no-store'}); if(!res.ok) throw new Error(`${path}: HTTP ${res.status}`); return await res.json(); }
+    async function refreshData() {
+      if(state.inFlight) return; state.inFlight=true;
+      try {
+        const [recent, summary, nightscout, relayStatus] = await Promise.all([fetchJson('/api/heart/recent?minutes=720'), fetchJson('/api/summary/today'), fetchJson('/api/nightscout/recent?count=288'), fetchJson('/api/relay/status')]);
+        state.points = recent.map(d=>({t:new Date(d.timestamp_utc), bpm:Number(d.bpm), source:d.source || 'unknown'})).filter(p=>Number.isFinite(p.bpm));
+        if(state.points.length){ const latest=state.points[state.points.length-1]; state.latestBpm=latest.bpm; state.latestTime=latest.t; const age=Date.now()-latest.t.getTime(); $('current-bpm').textContent=Math.round(latest.bpm); $('last-updated').textContent=`Last reading: ${latest.t.toLocaleString()} • ${latest.source}`; $('data-age').textContent=`Data age: ${ageText(age)} • Source: ${latest.source}`; setStatus(age<120000?'Live feed':'Delayed data', age<120000?'ok':'warn'); }
+        else {
+          if (summary.latest_timestamp_utc) {
+            const latestTime = new Date(summary.latest_timestamp_utc);
+            const latestBpm = Number(summary.latest_bpm);
+            state.latestBpm = Number.isFinite(latestBpm) ? latestBpm : null;
+            state.latestTime = latestTime;
+            const age = Date.now() - latestTime.getTime();
+            $('current-bpm').textContent = state.latestBpm ? Math.round(state.latestBpm) : '—';
+            $('last-updated').textContent = `Last known reading: ${latestTime.toLocaleString()} • ${summary.latest_source || 'unknown'}`;
+            $('data-age').textContent = `No readings in 12h window. Last known data age: ${ageText(age)} • Source: ${summary.latest_source || 'unknown'}`;
+            setStatus('Stale Health Connect data', 'warn');
+          } else {
+            state.latestBpm=null; state.latestTime=null; $('current-bpm').textContent='—'; $('last-updated').textContent='No readings received yet.'; $('data-age').textContent='No telemetry in the last 12 hours.'; setStatus('Waiting for data');
+          }
+        }
+        $('avg-bpm').textContent = summary.avg_bpm ? Number(summary.avg_bpm).toFixed(0) : '—'; $('min-bpm').textContent = summary.min_bpm ? Math.round(summary.min_bpm) : '—'; $('max-bpm').textContent = summary.max_bpm ? Math.round(summary.max_bpm) : '—'; $('count').textContent = summary.count || 0;
+        updateGlucose(nightscout);
+        const relay = relayStatus && relayStatus[0] ? ` • relay ${relayStatus[0].status} ${relayStatus[0].heart_count} HC heart samples • ${relayStatus[0].message || 'no relay detail'}` : ' • relay silent';
+        $('debug').textContent = `Last poll: ${new Date().toLocaleTimeString()} • ${state.points.length} heart points in 12h window • ${state.glucose.length} glucose points${relay}`;
+        drawHistory();
+      } catch(err) { console.error(err); setStatus('Server unreachable','err'); $('debug').textContent=`Poll failed: ${err.message}`; drawHistory(); drawGlucose(); }
+      finally { state.inFlight=false; }
+    }
+    function init(){ drawHistory(); drawGlucose(); drawEcg(); refreshData(); state.timer=setInterval(refreshData,5000); }
+    window.addEventListener('resize', ()=>{ drawHistory(); drawGlucose(); }); window.addEventListener('load', init, {once:true});
+  </script>
+</body>
+</html>

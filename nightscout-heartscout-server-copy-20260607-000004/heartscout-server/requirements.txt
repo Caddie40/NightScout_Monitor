@@ -1,0 +1,7 @@
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic==2.7.4
+sqlite-utils==3.36
+python-dotenv==1.0.1
+websockets==12.0
+starlette==0.37.2

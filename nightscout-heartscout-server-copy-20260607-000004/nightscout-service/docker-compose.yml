@@ -1,0 +1,39 @@
+services:
+  mongo:
+    image: mongo:6
+    container_name: nightscout-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - nightscout
+
+  nightscout:
+    image: nightscout/cgm-remote-monitor:latest
+    container_name: nightscout
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    env_file:
+      - .env
+    ports:
+      - "your preferred ports here (typically 3000:1337)"
+    volumes:
+      - ./custom-css/main.css:/opt/app/static/css/main.css:ro
+      - ./custom-views/index.html:/opt/app/views/index.html:ro
+      - ./custom-views/frame.html:/opt/app/views/frame.html:ro
+      - ./custom-views/adminindex.html:/opt/app/views/adminindex.html:ro
+      - ./custom-views/foodindex.html:/opt/app/views/foodindex.html:ro
+      - ./custom-views/profileindex.html:/opt/app/views/profileindex.html:ro
+      - ./custom-views/reportindex.html:/opt/app/views/reportindex.html:ro
+      - ./custom-views/service-worker.js:/opt/app/views/service-worker.js:ro
+      - ./custom-server/lib/server/treatments.js:/opt/app/lib/server/treatments.js:ro
+    networks:
+      - nightscout
+
+volumes:
+  mongo-data:
+
+networks:
+  nightscout:
+    name: nightscout

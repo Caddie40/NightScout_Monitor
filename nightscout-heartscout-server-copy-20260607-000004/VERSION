@@ -1,0 +1,6 @@
+heartscout-nightscout-server-bundle 1.0.0
+build: 20260607-000004
+nightscout-upstream: 15.0.7
+nightscout-image: nightscout/cgm-remote-monitor:latest
+heartscout-server: 1.0.0
+librelinkup-nightscout-uploader: 1.0.0
